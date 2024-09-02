@@ -73,6 +73,9 @@ The service will start on `http://localhost:5001`.
 - **Step 4**: Expand to a microservices architecture (Planned).
 - **Step 5**: Deploy the system to the cloud (Planned).
 
+## Progress
+
+--**Ste 1**: Completed. Also tagged this milestone. this when checked out will give you a basic FE/BE for lifecycle
 ## Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request with your changes.
