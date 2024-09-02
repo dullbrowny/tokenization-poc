@@ -1,27 +1,20 @@
-from sqlalchemy import create_engine, Column, String, DateTime, Enum
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 from datetime import datetime
-import enum
+from enum import Enum
+from . import db
 
-Base = declarative_base()
-
-class TokenStatus(enum.Enum):
+class TokenStatus(Enum):
     active = "active"
     suspended = "suspended"
     closed = "closed"
 
-class Token(Base):
+class Token(db.Model):
     __tablename__ = 'tokens'
-    
-    token = Column(String, primary_key=True)
-    data = Column(String)
-    status = Column(Enum(TokenStatus))
-    created_at = Column(DateTime, default=datetime.utcnow)
 
-# Setup the database
-engine = create_engine('sqlite:///tokens.db')
-Base.metadata.create_all(engine)
+    token = db.Column(db.String, primary_key=True)
+    data = db.Column(db.String)
+    status = db.Column(db.Enum(TokenStatus))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-Session = sessionmaker(bind=engine)
-session = Session()
+# No need to manually set up the engine or session here.
+# Flask-SQLAlchemy will handle this based on the config in __init__.py
+
