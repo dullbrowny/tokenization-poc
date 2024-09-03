@@ -1,10 +1,32 @@
 from flask import request, jsonify
 from cryptography.fernet import Fernet
 from datetime import datetime
+from app import app  # Ensure this line is present at the top
 
 key = Fernet.generate_key()
 cipher_suite = Fernet(key)
 token_store = {}
+
+
+@app.route('/tokenize', methods=['POST'])
+def tokenize():
+    try:
+        data = request.json.get('data')
+        print(f"Received data for tokenization: {data}")
+
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        if isinstance(data, dict):
+            return jsonify({"error": "Data must be a string, not a dictionary"}), 400
+
+        token = cipher_suite.encrypt(data.encode()).decode()
+        token_store[token] = {"data": data, "status": "active", "created_at": datetime.utcnow()}
+        return jsonify({"token": token}), 200
+    except Exception as e:
+        print(f"Error during tokenization: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 def register_routes(app):
     @app.route('/tokenize', methods=['POST'])

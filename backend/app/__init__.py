@@ -1,19 +1,12 @@
 from flask import Flask
-from .routes import register_routes
-from .config import Config
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from .config import Config
 
 app = Flask(__name__)
 CORS(app)
 app.config.from_object(Config)
 
-# Initialize the database
-db = SQLAlchemy(app)
-
-# Register routes
-register_routes(app)
-
-if __name__ == "__main__":
-    app.run()
+# Import and register routes
+from .routes import *
+from .stripe_routes import *
 

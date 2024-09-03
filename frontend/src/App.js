@@ -1,176 +1,167 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { tokenizeData } from './services/api';
+import { stripeTokenizeCard } from './services/stripeApi';
 
 function App() {
-  const [data, setData] = useState('');
-  const [token, setToken] = useState('');
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  const [debug, setDebug] = useState(null);
+    // States for regular tokenization
+    const [cardNumber, setCardNumber] = useState("");
+    const [expMonth, setExpMonth] = useState("");
+    const [expYear, setExpYear] = useState("");
+    const [cvc, setCvc] = useState("");
+    const [result, setResult] = useState("");
+    const [error, setError] = useState("");
+    const [debug, setDebug] = useState("");
 
-  const clearMessages = () => {
-    setResult(null);
-    setError(null);
-    setDebug(null);
-  };
+    // States for Stripe tokenization
+    const [stripeCardNumber, setStripeCardNumber] = useState("");
+    const [stripeExpMonth, setStripeExpMonth] = useState("");
+    const [stripeExpYear, setStripeExpYear] = useState("");
+    const [stripeCvc, setStripeCvc] = useState("");
 
-  const handleTokenize = async () => {
-    clearMessages();
+    const clearMessages = () => {
+        setResult("");
+        setError("");
+        setDebug("");
+    };
+
+/*
+
+    const handleTokenize = async () => {
+        clearMessages();
+        try {
+    	const dataToTokenize = `${cardNumber}|${expMonth}|${expYear}|${cvc}`;
+
+            const response = await tokenizeData(dataToTokenize);
+
+            const response = await tokenizeData({
+                number: dataToTokenize,
+                exp_month: expMonth,
+                exp_year: expYear,
+                cvc: cvc,
+            });
+
+            setResult(`Tokenized Value: ${response.data.token}`);
+            setDebug(`Tokenization successful: ${response.data.token}`);
+        } catch (err) {
+            setError('Failed to tokenize data');
+            setDebug(err.message);
+        }
+    };
+*/
+
+const handleTokenize = async () => {
     try {
-      const response = await axios.post('http://127.0.0.1:5000/tokenize', { data });
-      setResult(`Tokenized Value: ${response.data.token}`);
-      setToken(response.data.token);  // Automatically set token for further testing
-      setDebug(`Tokenization successful: ${response.data.token}`);
-    } catch (err) {
-      setError('Failed to tokenize data');
-      setDebug(err.message);
+    	const dataToTokenize = `${cardNumber}|${expMonth}|${expYear}|${cvc}`;
+        const response = await tokenizeData(dataToTokenize); 
+        if (response && response.token) {
+            console.log('Tokenized data:', response.token);
+            setResult(`Tokenized Value: ${response.token}`);
+            setDebug(`Stripe Tokenization successful: ${response.data.token}`);
+            // Handle successful tokenization here, e.g., display token
+        } else {
+            console.error("Token property is missing in the response");
+            // Handle the case where the token is missing in the response
+        }
+    } catch (error) {
+        console.error("Failed to tokenize data:", error);
+        // Handle the error here, e.g., show an error message to the user
     }
-  };
+};
 
-  const handleDetokenize = async () => {
-    clearMessages();
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/detokenize', { token });
-      setResult(`Original Data: ${response.data.data}`);
-      setDebug(`Detokenization successful: ${response.data.data}`);
-    } catch (err) {
-      setError('Failed to detokenize data');
-      setDebug(err.message);
-    }
-  };
+    const handleStripeTokenize = async () => {
+        clearMessages();
+        try {
+            const response = await stripeTokenizeCard({
+                number: stripeCardNumber,
+                exp_month: stripeExpMonth,
+                exp_year: stripeExpYear,
+                cvc: stripeCvc,
+            });
+            setResult(`Stripe Tokenized Value: ${response.data.token}`);
+            setDebug(`Stripe Tokenization successful: ${response.data.token}`);
+        } catch (err) {
+            setError('Failed to tokenize data with Stripe');
+            setDebug(err.message);
+        }
+    };
 
-  const handleSuspend = async () => {
-    clearMessages();
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/suspend', { token });
-      setResult(response.data.message);
-      setDebug('Token suspended successfully');
-    } catch (err) {
-      setError('Failed to suspend token');
-      setDebug(err.message);
-    }
-  };
+    return (
+        <div className="App">
+            <h1>Tokenization Service</h1>
+            <div className="mb-3">
+                <input
+                    type="text"
+                    className="form-control"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    placeholder="Enter Card Number"
+                />
+                <input
+                    type="text"
+                    className="form-control mt-2"
+                    value={expMonth}
+                    onChange={(e) => setExpMonth(e.target.value)}
+                    placeholder="Enter Expiration Month"
+                />
+                <input
+                    type="text"
+                    className="form-control mt-2"
+                    value={expYear}
+                    onChange={(e) => setExpYear(e.target.value)}
+                    placeholder="Enter Expiration Year"
+                />
+                <input
+                    type="text"
+                    className="form-control mt-2"
+                    value={cvc}
+                    onChange={(e) => setCvc(e.target.value)}
+                    placeholder="Enter CVC"
+                />
+                <button className="btn btn-primary mt-2" onClick={handleTokenize}>
+                    Tokenize
+                </button>
+            </div>
 
-  const handleActivate = async () => {
-    clearMessages();
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/activate', { token });
-      setResult(response.data.message);
-      setDebug('Token activated successfully');
-    } catch (err) {
-      setError('Failed to activate token');
-      setDebug(err.message);
-    }
-  };
+            <h2>Stripe Tokenization Service</h2>
+            <div className="mb-3">
+                <input
+                    type="text"
+                    className="form-control"
+                    value={stripeCardNumber}
+                    onChange={(e) => setStripeCardNumber(e.target.value)}
+                    placeholder="Enter Stripe Card Number"
+                />
+                <input
+                    type="text"
+                    className="form-control mt-2"
+                    value={stripeExpMonth}
+                    onChange={(e) => setStripeExpMonth(e.target.value)}
+                    placeholder="Enter Expiration Month"
+                />
+                <input
+                    type="text"
+                    className="form-control mt-2"
+                    value={stripeExpYear}
+                    onChange={(e) => setStripeExpYear(e.target.value)}
+                    placeholder="Enter Expiration Year"
+                />
+                <input
+                    type="text"
+                    className="form-control mt-2"
+                    value={stripeCvc}
+                    onChange={(e) => setStripeCvc(e.target.value)}
+                    placeholder="Enter CVC"
+                />
+                <button className="btn btn-primary mt-2" onClick={handleStripeTokenize}>
+                    Tokenize with Stripe
+                </button>
+            </div>
 
-  const handleClose = async () => {
-    clearMessages();
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/close', { token });
-      setResult(response.data.message);
-      setDebug('Token closed successfully');
-    } catch (err) {
-      setError('Failed to close token');
-      setDebug(err.message);
-    }
-  };
-
-  return (
-    <div className="container mt-5">
-      <h1 className="text-center">Tokenization Service</h1>
-
-      <div className="mb-3">
-        <input
-          type="text"
-          className="form-control"
-          value={data}
-          onChange={(e) => setData(e.target.value)}
-          placeholder="Enter data to tokenize"
-        />
-        <button className="btn btn-primary mt-2" onClick={handleTokenize}>
-          Tokenize
-        </button>
-      </div>
-
-      <div className="mt-5">
-        <h2>Detokenize Data</h2>
-        <input
-          type="text"
-          className="form-control"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="Enter token to detokenize"
-        />
-        <button className="btn btn-secondary mt-2" onClick={handleDetokenize}>
-          Detokenize
-        </button>
-      </div>
-
-      <div className="mt-5">
-        <h2>Suspend Token</h2>
-        <input
-          type="text"
-          className="form-control"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="Enter token to suspend"
-        />
-        <button className="btn btn-warning mt-2" onClick={handleSuspend}>
-          Suspend
-        </button>
-      </div>
-
-      <div className="mt-5">
-        <h2>Activate Token</h2>
-        <input
-          type="text"
-          className="form-control"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="Enter token to activate"
-        />
-        <button className="btn btn-success mt-2" onClick={handleActivate}>
-          Activate
-        </button>
-      </div>
-
-      <div className="mt-5">
-        <h2>Close Token</h2>
-        <input
-          type="text"
-          className="form-control"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="Enter token to close"
-        />
-        <button className="btn btn-danger mt-2" onClick={handleClose}>
-          Close
-        </button>
-      </div>
-
-      {result && (
-        <div className="mt-3 alert alert-success">
-          <h4>Result:</h4>
-          <p>{result}</p>
+            {result && <div className="alert alert-success mt-3">{result}</div>}
+            {error && <div className="alert alert-danger mt-3">{error}</div>}
+            {debug && <div className="alert alert-info mt-3">{debug}</div>}
         </div>
-      )}
-
-      {error && (
-        <div className="mt-3 alert alert-danger">
-          <h4>Error:</h4>
-          <p>{error}</p>
-        </div>
-      )}
-
-      {debug && (
-        <div className="mt-3 alert alert-info">
-          <h4>Debug Info:</h4>
-          <p>{debug}</p>
-        </div>
-      )}
-    </div>
-  );
+    );
 }
 
 export default App;
